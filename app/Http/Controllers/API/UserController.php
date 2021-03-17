@@ -19,12 +19,12 @@ class UserController extends Controller
     use PasswordValidationRules;
     public function login(Request $request)
     {
+        // Validasi input
+        $this->validate($request, [
+            'email' => 'email|required',
+            'password' => 'required'
+        ]);
         try {
-            // Validasi input
-            $this->validate($request, [
-                'email' => 'email|required',
-                'password' => 'required'
-            ]);
 
             // Mengecek credential login
             $credentials = request(['email', 'password']);
@@ -33,13 +33,13 @@ class UserController extends Controller
                     'message' => 'Unauthorized'
                 ], 'Authentication Failed', 500);
             }
-
+            
             // Jika Hash tidak sesuai
             $user = User::where('email', $request->email)->first();
-            if(!Hash::check($request->email, $user->email, [])) {
+            if(!Hash::check($request->password, $user->password)) {
                 throw new \Exception('Invalid Credentials');
             }
-
+    
             // Jika berhasil maka loginkan
             $tokenResult = $user->createToken('authToken')->plainTextToken;
             return ResponseFormatter::success([
@@ -98,7 +98,7 @@ class UserController extends Controller
         return ResponseFormatter::success($token, 'Token Revoked');
     }
 
-    public function fatch(Request $request) 
+    public function fetch(Request $request) 
     {
         return ResponseFormatter::success(
             $request->user(), 
@@ -134,7 +134,7 @@ class UserController extends Controller
             
             $user = Auth::user();
             $user->profile_photo_path = $file;
-            $user->udpate();
+            $user->update();
 
             return ResponseFormatter::success([$file], 'file successfully updated');
         }
